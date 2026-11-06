@@ -9,3 +9,5 @@ find_package(SDL3 REQUIRED CONFIG)
 
 add_executable(minesweeper src/main.cpp)
 target_link_libraries(minesweeper PRIVATE SDL3::SDL3)
+
+target_compile_options(minesweeper PRIVATE -Wall -Wextra -Wpedantic)
