@@ -2,11 +2,20 @@
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL_messagebox.h>
+#include <SDL3/SDL_render.h>
 #include <SDL3/SDL_video.h>
 
-void cleanup(SDL_Window *window);
+struct SDLState {
+  SDL_Window *window;
+  SDL_Renderer *renderer;
+};
+
+void cleanup(SDLState &state);
 
 int main(int argc, char *argv[]) {
+
+  // Init SDL state instance
+  SDLState state;
 
   // Init SDL video sub system
   if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -20,22 +29,23 @@ int main(int argc, char *argv[]) {
   int width = 800;
   int height = 400;
   // Pointer to SDL window object
-  SDL_Window *window = SDL_CreateWindow("Minesweeper", width, height, 0);
-
+  state.window = SDL_CreateWindow("Minesweeper", width, height, 0);
   // Check if window open, quit with error message if not
-  if (!window) {
+  if (!state.window) {
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error",
-                             "Error creating window", window);
-    cleanup(window);
+                             "Error creating window", state.window);
+    cleanup(state);
     return 1;
   }
 
-  // Rendering to show window, not yet in tuto
-  SDL_Renderer *renderer = SDL_CreateRenderer(window, nullptr);
-  if (!renderer) {
-    SDL_Log("Création du renderer échouée : %s", SDL_GetError());
-    SDL_DestroyWindow(window);
-    SDL_Quit();
+  // Create renderer
+  // Pointer to SDL renderer
+  state.renderer = SDL_CreateRenderer(state.window, nullptr);
+  // Check if renderer init, quit with error if not
+  if (!state.renderer) {
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error",
+                             "Error creating renderer", state.window);
+    cleanup(state);
     return 1;
   }
 
@@ -56,21 +66,27 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    // Rendering to show window, not yet in tuto
-    SDL_SetRenderDrawColor(renderer, 40, 40, 60, 255);
-    SDL_RenderClear(renderer);
-    SDL_RenderPresent(renderer);
-    SDL_Delay(16);
+    // Perform drawing commands
+    // Clear screen (pwhite)
+    SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
+    SDL_RenderClear(state.renderer);
+
+    // Swap buffers and present
+    SDL_RenderPresent(state.renderer);
   }
 
   // Clean quit SDL
-  cleanup(window);
+  cleanup(state);
   return 0;
 }
 
-void cleanup(SDL_Window *window) {
-  // Close window
-  SDL_DestroyWindow(window);
+void cleanup(SDLState &state) {
+
+  // Destroy renderer
+  SDL_DestroyRenderer(state.renderer);
+
+  // Destroy window
+  SDL_DestroyWindow(state.window);
 
   // Clean quit SDL
   SDL_Quit();
