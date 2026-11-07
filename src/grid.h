@@ -1,5 +1,7 @@
 #pragma once
 
+#include "cell.h"
+
 class Grid {
 public:
   Grid(int nCol, int nRow, int nMine);
