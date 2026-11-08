@@ -17,6 +17,8 @@ int Grid::get_height() const { return height_; }
 
 int Grid::get_n_mines() const { return n_mines_; }
 
+bool Grid::is_mine(int x, int y) const { return at(x, y).is_mine(); }
+
 Cell &Grid::at(int x, int y) {
   if (!in_bounds(x, y)) {
     throw std::out_of_range("Grid::at: coordinates out of range");
@@ -40,7 +42,7 @@ void Grid::create_grid() {
   }
 }
 
-// Assigne cells with mine
+// Randomly mines to cell
 void Grid::place_mines() {
 
   // Number of cells
@@ -61,6 +63,11 @@ void Grid::place_mines() {
 
   // Shuffle indices list
   std::shuffle(indices.begin(), indices.end(), rng);
+
+  // n first cells get mine
+  for (int i = 0; i < n_mines_; i++) {
+    cells_[indices[i]].set_mine();
+  }
 }
 
 // transform (x, y) coord to index

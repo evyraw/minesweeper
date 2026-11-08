@@ -12,6 +12,7 @@ public:
   int get_width() const;
   int get_height() const;
   int get_n_mines() const;
+  bool is_mine(int x, int y) const;
 
   Cell &at(int x, int y);
   const Cell &at(int x, int y) const;
