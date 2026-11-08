@@ -1,5 +1,6 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3/SDL_render.h>
 
 #include "grid.h"
 
@@ -12,14 +13,17 @@ struct SDLState {
   int logical_height = 0;
 };
 
-const int GRID_WIDTH = 12;
-const int GRID_HEIGHT = 8;
+const int GRID_WIDTH = 16;
+const int GRID_HEIGHT = 12;
 const int N_MINES = 10;
 const float CELL_SIZE = 16.0f;
 
 bool initialize(SDLState &state);
 void cleanup(SDLState &state);
-void render_grid(const Grid &grid, SDL_Renderer *renderer);
+void render_grid(SDL_Renderer *renderer, const Grid &grid);
+void render_cell(SDL_Renderer *renderer, int x_index, int y_index, bool mine);
+void draw_filled_circle(SDL_Renderer *renderer, float center_x, float center_y,
+                        float radius);
 
 int main(int, char *[]) {
 
@@ -85,7 +89,7 @@ int main(int, char *[]) {
     // SDL_RenderRect(state.renderer, &outline);
 
     // Render cells
-    render_grid(grid, state.renderer);
+    render_grid(state.renderer, grid);
 
     // Swap buffers and present
     SDL_RenderPresent(state.renderer);
@@ -139,24 +143,54 @@ void cleanup(SDLState &state) {
   SDL_Quit();
 }
 
-void render_grid(const Grid &grid, SDL_Renderer *renderer) {
+void render_grid(SDL_Renderer *renderer, const Grid &grid) {
   const int width = grid.get_width();
   const int height = grid.get_height();
 
-  for (int j = 0; j < height; ++j) {
-    for (int i = 0; i < width; ++i) {
+  for (int y = 0; y < height; ++y) {
+    for (int x = 0; x < width; ++x) {
+      render_cell(renderer, x, y, grid.is_mine(x, y));
+    }
+  }
+}
 
-      float x = i * CELL_SIZE;
-      float y = j * CELL_SIZE;
+void render_cell(SDL_Renderer *renderer, int x_index, int y_index, bool mine) {
+  float x = x_index * CELL_SIZE;
+  float y = y_index * CELL_SIZE;
 
-      if (grid.is_mine(i, j)) {
-        SDL_SetRenderDrawColor(renderer, 200, 20, 100, 255);
-      } else {
-        SDL_SetRenderDrawColor(renderer, 20, 200, 100, 255);
+  // Border
+  SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
+  const SDL_FRect square = {x, y, CELL_SIZE, CELL_SIZE};
+  SDL_RenderRect(renderer, &square);
+
+  // Mine
+  if (mine) {
+
+    float center_x = x + CELL_SIZE / 2;
+    float center_y = y + CELL_SIZE / 2;
+    float radius = CELL_SIZE / 4;
+
+    SDL_SetRenderDrawColor(renderer, 200, 20, 100, 255);
+    draw_filled_circle(renderer, center_x, center_y, radius);
+  }
+}
+
+void draw_filled_circle(SDL_Renderer *renderer, float center_x, float center_y,
+                        float radius) {
+  const int x0 = static_cast<int>(SDL_floorf(center_x - radius));
+  const int x1 = static_cast<int>(SDL_ceilf(center_x + radius));
+  const int y0 = static_cast<int>(SDL_floorf(center_y - radius));
+  const int y1 = static_cast<int>(SDL_ceilf(center_y + radius));
+
+  for (int py = y0; py < y1; ++py) {
+    for (int px = x0; px < x1; ++px) {
+      const float dx = (px + 0.5f) - center_x;
+      const float dy = (py + 0.5f) - center_y;
+      if (dx * dx + dy * dy <= radius * radius) {
+        const SDL_FRect pixel = {static_cast<float>(px), static_cast<float>(py),
+                                 1.0f, 1.0f};
+        SDL_RenderFillRect(renderer, &pixel);
       }
-
-      const SDL_FRect square = {x, y, CELL_SIZE, CELL_SIZE};
-      SDL_RenderRect(renderer, &square);
     }
   }
 }
