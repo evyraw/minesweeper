@@ -1,25 +1,29 @@
 #pragma once
 
-enum class FlagState { None, Flag, Question };
+enum class FlagState { NoFlag, Flag, Question };
 
 class Cell {
 public:
   Cell(int x, int y);
 
-  void reveal();
-  void setMine();
-  void cycleFlag();
+  // Accessors
+  int get_x() const;
+  int get_y() const;
+  bool is_revealed() const;
+  bool is_mine() const;
+  FlagState get_flag_state() const;
 
-  bool isRevealed() const;
-  bool isMine() const;
-  FlagState getFlagState() const;
+  // Mutators
+  void reveal();
+  void set_mine();
+  void cycle_flag();
 
 private:
-  int x; // x coordinate of the cell in the grid
-  int y; // y coordinate of the cell in the grid
+  int x_;
+  int y_;
 
-  bool mine;
-  bool revealed;
+  bool mine_ = false;
+  bool revealed_ = false;
 
-  FlagState flagState;
+  FlagState flag_state_ = FlagState::NoFlag;
 };
