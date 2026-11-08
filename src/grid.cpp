@@ -6,36 +6,36 @@
 #include "grid.h"
 
 Grid::Grid(int width, int height, int n_mines)
-    : width(width), height(height), n_mines(n_mines) {
+    : width_(width), height_(height), n_mines_(n_mines) {
   create_grid();
   place_mines();
 }
 
-int Grid::get_width() const { return width; }
+int Grid::get_width() const { return width_; }
 
-int Grid::get_height() const { return height; }
+int Grid::get_height() const { return height_; }
 
-int Grid::get_n_mines() const { return n_mines; }
+int Grid::get_n_mines() const { return n_mines_; }
 
 Cell &Grid::at(int x, int y) {
   if (!in_bounds(x, y)) {
     throw std::out_of_range("Grid::at: coordinates out of range");
   }
-  return cells[index(x, y)];
+  return cells_[index(x, y)];
 }
 const Cell &Grid::at(int x, int y) const {
   if (!in_bounds(x, y)) {
     throw std::out_of_range("Grid::at: coordinates out of range");
   }
-  return cells[index(x, y)];
+  return cells_[index(x, y)];
 }
 
 // Create grid of cells
 void Grid::create_grid() {
-  cells.reserve(width * height); // Reserves space in memory
-  for (int y = 0; y < height; y++) {
-    for (int x = 0; x < width; x++) {
-      cells.emplace_back(x, y);
+  cells_.reserve(width_ * height_); // Reserves space in memory
+  for (int y = 0; y < height_; y++) {
+    for (int x = 0; x < width_; x++) {
+      cells_.emplace_back(x, y);
     }
   }
 }
@@ -44,9 +44,9 @@ void Grid::create_grid() {
 void Grid::place_mines() {
 
   // Number of cells
-  const int n_cells = width * height;
+  const int n_cells = width_ * height_;
 
-  if (n_mines >= n_cells) {
+  if (n_mines_ >= n_cells) {
     throw std::invalid_argument("Grid::place_mines: too many mines");
   }
 
@@ -64,9 +64,9 @@ void Grid::place_mines() {
 }
 
 // transform (x, y) coord to index
-int Grid::index(int x, int y) const { return y * width + x; }
+int Grid::index(int x, int y) const { return y * width_ + x; }
 
 // Check if coord in bound
 bool Grid::in_bounds(int x, int y) const {
-  return x >= 0 && x < width && y >= 0 && y < height;
+  return x >= 0 && x < width_ && y >= 0 && y < height_;
 }
