@@ -12,9 +12,9 @@ struct SDLState {
   int logical_height = 0;
 };
 
-const int GRID_WIDTH = 16;
-const int GRID_HEIGHT = 12;
-const int N_MINES = 3;
+const int GRID_WIDTH = 12;
+const int GRID_HEIGHT = 8;
+const int N_MINES = 10;
 const float CELL_SIZE = 16.0f;
 
 bool initialize(SDLState &state);
@@ -143,13 +143,18 @@ void render_grid(const Grid &grid, SDL_Renderer *renderer) {
   const int width = grid.get_width();
   const int height = grid.get_height();
 
-  SDL_SetRenderDrawColor(renderer, 20, 200, 100, 255);
-
   for (int j = 0; j < height; ++j) {
     for (int i = 0; i < width; ++i) {
 
       float x = i * CELL_SIZE;
       float y = j * CELL_SIZE;
+
+      if (grid.is_mine(i, j)) {
+        SDL_SetRenderDrawColor(renderer, 200, 20, 100, 255);
+      } else {
+        SDL_SetRenderDrawColor(renderer, 20, 200, 100, 255);
+      }
+
       const SDL_FRect square = {x, y, CELL_SIZE, CELL_SIZE};
       SDL_RenderRect(renderer, &square);
     }
