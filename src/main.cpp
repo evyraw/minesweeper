@@ -1,28 +1,25 @@
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_events.h>
 #include <SDL3/SDL_main.h>
-#include <SDL3/SDL_messagebox.h>
-#include <SDL3/SDL_rect.h>
-#include <SDL3/SDL_render.h>
-#include <SDL3/SDL_timer.h>
-#include <SDL3/SDL_video.h>
 
 #include "grid.h"
 
 struct SDLState {
-  SDL_Window *window;
-  SDL_Renderer *renderer;
-  int width, height, logW, logH;
+  SDL_Window *window = nullptr;
+  SDL_Renderer *renderer = nullptr;
+  int width = 800;
+  int height = 600;
+  int logical_width = 0;
+  int logical_height = 0;
 };
 
-const int N_COL = 16;
-const int N_ROW = 12;
-const int N_MINE = 3;
+const int GRID_WIDTH = 16;
+const int GRID_HEIGHT = 12;
+const int N_MINES = 3;
 const float CELL_SIZE = 16.0f;
 
 bool initialize(SDLState &state);
 void cleanup(SDLState &state);
-void renderGrid(const Grid &grid, SDL_Renderer *renderer);
+void render_grid(const Grid &grid, SDL_Renderer *renderer);
 
 int main(int argc, char *argv[]) {
 
@@ -30,16 +27,16 @@ int main(int argc, char *argv[]) {
   SDLState state;
   state.width = 800;
   state.height = 600;
-  state.logW = N_COL * CELL_SIZE;
-  state.logH = N_ROW * CELL_SIZE;
+  state.logical_width = static_cast<int>(GRID_WIDTH * CELL_SIZE);
+  state.logical_height = static_cast<int>(GRID_HEIGHT * CELL_SIZE);
 
   // Init SDL, exit if not sucessful
   if (!initialize(state)) {
     return 1;
-  };
+  }
 
   // Init game
-  Grid grid(N_COL, N_ROW, N_MINE);
+  Grid grid(GRID_WIDTH, GRID_HEIGHT, N_MINES);
 
   // uint64_t prevTime = SDL_GetTicks();
 
@@ -49,7 +46,7 @@ int main(int argc, char *argv[]) {
 
     // Delta time, in s
     // uint64_t nowTime = SDL_GetTicks();
-    // float deltaTime = nowTime - prevTime / 1000.0f;
+    // float deltaTime = (nowTime - prevTime) / 1000.0f;
     // prevTime = nowTime;
 
     // Handle events
@@ -76,9 +73,9 @@ int main(int argc, char *argv[]) {
     SDL_RenderClear(state.renderer);
 
     SDL_SetRenderDrawColor(state.renderer, 20, 20, 100, 255);
-    SDL_FRect gameArea = {0.0f, 0.0f, static_cast<float>(state.logW),
-                          static_cast<float>(state.logH)};
-    SDL_RenderFillRect(state.renderer, &gameArea);
+    SDL_FRect game_area = {0.0f, 0.0f, static_cast<float>(state.logical_width),
+                           static_cast<float>(state.logical_height)};
+    SDL_RenderFillRect(state.renderer, &game_area);
 
     // exemples
     // SDL_SetRenderDrawColor(state.renderer, 200, 200, 220, 255);
@@ -90,7 +87,7 @@ int main(int argc, char *argv[]) {
     // SDL_RenderRect(state.renderer, &outline);
 
     // Render cells
-    renderGrid(grid, state.renderer);
+    render_grid(grid, state.renderer);
 
     // Swap buffers and present
     SDL_RenderPresent(state.renderer);
@@ -102,45 +99,34 @@ int main(int argc, char *argv[]) {
 }
 
 bool initialize(SDLState &state) {
-
-  bool initSuccess = true;
-
-  // Init SDL video sub system
   if (!SDL_Init(SDL_INIT_VIDEO)) {
-    // Error message if SDL3 init failed
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error",
-                             "Error initializing SDL3", nullptr);
-    initSuccess = false;
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", SDL_GetError(),
+                             nullptr);
+    return false;
   }
 
-  // Create Window
-  // Pointer to SDL window object
   state.window = SDL_CreateWindow("Minesweeper", state.width, state.height,
                                   SDL_WINDOW_RESIZABLE);
-  // Check if window open, quit with error message if not
   if (!state.window) {
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error",
-                             "Error creating window", state.window);
-    cleanup(state);
-    initSuccess = false;
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", SDL_GetError(),
+                             nullptr);
+    SDL_Quit();
+    return false;
   }
 
-  // Create renderer
-  // Pointer to SDL renderer
   state.renderer = SDL_CreateRenderer(state.window, nullptr);
-  // Check if renderer init, quit with error if not
   if (!state.renderer) {
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error",
-                             "Error creating renderer", state.window);
-    cleanup(state);
-    initSuccess = false;
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", SDL_GetError(),
+                             nullptr);
+    SDL_DestroyWindow(state.window);
+    SDL_Quit();
+    return false;
   }
 
-  // Configure presentation
-  SDL_SetRenderLogicalPresentation(state.renderer, state.logW, state.logH,
+  SDL_SetRenderLogicalPresentation(state.renderer, state.logical_width,
+                                   state.logical_height,
                                    SDL_LOGICAL_PRESENTATION_LETTERBOX);
-
-  return initSuccess;
+  return true;
 }
 
 void cleanup(SDLState &state) {
@@ -155,24 +141,18 @@ void cleanup(SDLState &state) {
   SDL_Quit();
 }
 
-void renderGrid(const Grid &grid, SDL_Renderer *renderer) {
-
-  // Grid size
-  int N_COL = grid.getNCol();
-  int N_ROW = grid.getNRow();
+void render_grid(const Grid &grid, SDL_Renderer *renderer) {
+  const int width = grid.get_width();
+  const int height = grid.get_height();
 
   SDL_SetRenderDrawColor(renderer, 20, 200, 100, 255);
 
-  // For each cell, render
-  for (int i = 0; i < N_COL; i++) {
-    for (int j = 0; j < N_ROW; j++) {
+  for (int j = 0; j < height; ++j) {
+    for (int i = 0; i < width; ++i) {
 
-      // Square coord
       float x = i * CELL_SIZE;
-      float y = j * CELL_SIZE;
-
-      // Draw square
-      SDL_FRect square = {x, y, CELL_SIZE, CELL_SIZE};
+      float y = i * CELL_SIZE;
+      const SDL_FRect square = {x, y, CELL_SIZE, CELL_SIZE};
       SDL_RenderRect(renderer, &square);
     }
   }
