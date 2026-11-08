@@ -6,8 +6,8 @@
 struct SDLState {
   SDL_Window *window = nullptr;
   SDL_Renderer *renderer = nullptr;
-  int width = 800;
-  int height = 600;
+  int window_width = 1000;
+  int window_height = 600;
   int logical_width = 0;
   int logical_height = 0;
 };
@@ -21,12 +21,10 @@ bool initialize(SDLState &state);
 void cleanup(SDLState &state);
 void render_grid(const Grid &grid, SDL_Renderer *renderer);
 
-int main(int argc, char *argv[]) {
+int main(int, char *[]) {
 
   // Init SDL state instance
   SDLState state;
-  state.width = 800;
-  state.height = 600;
   state.logical_width = static_cast<int>(GRID_WIDTH * CELL_SIZE);
   state.logical_height = static_cast<int>(GRID_HEIGHT * CELL_SIZE);
 
@@ -60,8 +58,8 @@ int main(int argc, char *argv[]) {
         break;
       }
       case SDL_EVENT_WINDOW_RESIZED: {
-        state.width = event.window.data1;
-        state.height = event.window.data2;
+        state.window_width = event.window.data1;
+        state.window_height = event.window.data2;
         break;
       }
       }
@@ -105,8 +103,8 @@ bool initialize(SDLState &state) {
     return false;
   }
 
-  state.window = SDL_CreateWindow("Minesweeper", state.width, state.height,
-                                  SDL_WINDOW_RESIZABLE);
+  state.window = SDL_CreateWindow("Minesweeper", state.window_width,
+                                  state.window_height, SDL_WINDOW_RESIZABLE);
   if (!state.window) {
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", SDL_GetError(),
                              nullptr);
@@ -151,7 +149,7 @@ void render_grid(const Grid &grid, SDL_Renderer *renderer) {
     for (int i = 0; i < width; ++i) {
 
       float x = i * CELL_SIZE;
-      float y = i * CELL_SIZE;
+      float y = j * CELL_SIZE;
       const SDL_FRect square = {x, y, CELL_SIZE, CELL_SIZE};
       SDL_RenderRect(renderer, &square);
     }
