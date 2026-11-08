@@ -6,22 +6,25 @@
 
 class Grid {
 public:
-  Grid(int nCol, int nRow, int nMine);
+  Grid(int width, int height, int n_mines);
 
-  int getNCol() const;
-  int getNRow() const;
-  int getNMine() const;
+  int get_width() const;
+  int get_height() const;
+  int get_n_mines() const;
 
   Cell &at(int x, int y);
   const Cell &at(int x, int y) const;
 
 private:
-  int nCol;
-  int nRow;
-  int nMine;
+  int width;
+  int height;
+  int n_mines;
   std::vector<Cell> cells;
 
-  void createGrid();
+  void create_grid();
+  void place_mines();
 
   int index(int x, int y) const;
+
+  bool in_bounds(int x, int y) const;
 };
